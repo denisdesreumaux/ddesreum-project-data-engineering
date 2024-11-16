@@ -204,7 +204,7 @@ def consolidate_paris_station_statement_data():
 
     paris_raw_data_df = pd.json_normalize(data)
     paris_raw_data_df["station_id"] = paris_raw_data_df["stationcode"].apply(lambda x: f"{PARIS_CITY_CODE}-{x}")
-    paris_raw_data_df["created_date"] = datetime.fromisoformat('2024-10-21')
+    paris_raw_data_df["created_date"] = date.today()
     paris_station_statement_data_df = paris_raw_data_df[[
         "station_id",
         "numdocksavailable",
@@ -232,7 +232,7 @@ def consolidate_nantes_station_statement_data():
 
     nantes_raw_data_df = pd.json_normalize(data)
     nantes_raw_data_df["station_id"] = nantes_raw_data_df["number"].apply(lambda x: f"{NANTES_CITY_CODE}-{x}")
-    nantes_raw_data_df["created_date"] = datetime.fromisoformat('2024-10-21')
+    nantes_raw_data_df["created_date"] = date.today()
     nantes_station_statement_data_df = nantes_raw_data_df[[
         "station_id",
         "available_bike_stands",
