@@ -14,6 +14,7 @@ from data_ingestion import (
     get_paris_realtime_bicycle_data,
     get_nantes_realtime_bicycle_data,
     get_toulouse_realtime_bicycle_data,
+    get_strasbourg_realtime_bicycle_data,
     get_commune_data
 )
 
@@ -38,6 +39,11 @@ def main():
     print("Starting Toulouse ingestion...")
     get_toulouse_realtime_bicycle_data()
     print("Toulouse's ingestion done !")
+
+    # For Strasbourg
+    print("Starting Strasbourg ingestion...")
+    get_strasbourg_realtime_bicycle_data()
+    print("Strasbourg's ingestion done !")
 
     # Towns data ingestion
     print("Starting towns ingestion...")

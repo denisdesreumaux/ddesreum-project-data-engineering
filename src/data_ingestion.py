@@ -25,6 +25,13 @@ def get_toulouse_realtime_bicycle_data():
 
     serialize_data(response.text, "toulouse_realtime_bicycle_data.json")
 
+def get_strasbourg_realtime_bicycle_data():
+    url = "https://data.strasbourg.eu/api/explore/v2.1/catalog/datasets/stations-velhop/exports/json"
+
+    response = requests.request("GET", url)
+
+    serialize_data(response.text, "strasbourg_realtime_bicycle_data.json")
+
 def get_commune_data():
     url = "https://geo.api.gouv.fr/communes"
 
