@@ -8,11 +8,12 @@ from data_consolidation import (
     create_consolidate_tables,
     consolidate_city_data,
     consolidate_station_data,
-    consolidate_station_statement_data
+    consolidate_station_statement_data,
 )
 from data_ingestion import (
     get_paris_realtime_bicycle_data,
     get_nantes_realtime_bicycle_data,
+    get_toulouse_realtime_bicycle_data,
     get_commune_data
 )
 
@@ -32,6 +33,11 @@ def main():
     print("Starting Nantes ingestion...")
     get_nantes_realtime_bicycle_data()
     print("Nantes' ingestion done !")
+
+    # For Toulouse
+    print("Starting Toulouse ingestion...")
+    get_toulouse_realtime_bicycle_data()
+    print("Toulouse's ingestion done !")
 
     # Towns data ingestion
     print("Starting towns ingestion...")
