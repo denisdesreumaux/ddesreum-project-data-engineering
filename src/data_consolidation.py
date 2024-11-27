@@ -5,6 +5,8 @@ import duckdb
 import pandas as pd
 
 today_date = datetime.now().strftime("%Y-%m-%d")
+
+# Const for each city used
 PARIS_CITY_CODE = 1
 NANTES_CITY_CODE = 2
 TOULOUSE_CITY_CODE = 3
@@ -18,17 +20,77 @@ def create_consolidate_tables():
             print(statement)
             con.execute(statement)
 
+"""
+Call each function for each city that will provide data for the CONSOLIDATE_STATION table
+"""
+def consolidate_station_data():
+    con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
+
+    paris_data = consolidate_station_paris_data()
+    nantes_data = consolidate_station_nantes_data()
+    toulouse_data = consolidate_station_toulouse_data()
+    strasbourg_data = consolidate_station_strasbourg_data()
+
+    all_data = [paris_data, nantes_data, toulouse_data, strasbourg_data]
+    all_data = pd.concat(all_data)
+
+    con.execute("INSERT OR REPLACE INTO CONSOLIDATE_STATION SELECT * FROM all_data;")
+
+"""
+Call each function for each city that will provide data for the CONSOLIDATE_STATION_STATEMENT table
+"""
+def consolidate_station_statement_data():
+    con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
+
+    paris_data = consolidate_paris_station_statement_data()
+    nantes_data = consolidate_nantes_station_statement_data()
+    toulouse_data = consolidate_toulouse_station_statement_data()
+    strasbourg_data = consolidate_strasbourg_station_statement_data()
+
+    all_data = [paris_data, nantes_data, toulouse_data, strasbourg_data]
+    all_data = pd.concat(all_data)
+
+    con.execute("INSERT OR REPLACE INTO CONSOLIDATE_STATION_STATEMENT SELECT * FROM all_data;") 
+
+"""
+Retrieve city data and insert it inside the CONSOLIDATE_CITY table
+"""
+def consolidate_city_data():
+    con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
+    data = {}
+
+    with open(f"data/raw_data/{today_date}/commune_data.json") as fd:
+        data = json.load(fd)
+
+    raw_data_df = pd.json_normalize(data)
+    raw_data_df["created_date"] = date.today()
+
+    city_data_df = raw_data_df[[
+        "code",
+        "nom",
+        "population"
+    ]]
+
+    city_data_df.rename(columns={
+        "code": "id",
+        "nom": "name",
+        "population": "nb_inhabitants"
+    }, inplace=True)
+
+    city_data_df["created_date"] = date.today()
+
+    con.execute("INSERT OR REPLACE INTO CONSOLIDATE_CITY SELECT * FROM city_data_df;")
+
+""" The functions below are used by consolidate_station_data """
+
 def consolidate_station_paris_data():
     data = {}
 
-    # Consolidation logic for Paris Bicycle data
     with open(f"data/raw_data/{today_date}/paris_realtime_bicycle_data.json") as fd:
         data = json.load(fd)
     
     paris_raw_data_df = pd.json_normalize(data)
-    paris_raw_data_df["id"] = paris_raw_data_df["stationcode"].apply(lambda x: f"{PARIS_CITY_CODE}-{x}")
-    paris_raw_data_df["address"] = None
-    paris_raw_data_df["created_date"] = date.today()
+    paris_raw_data_df = consolidate_format_df(paris_raw_data_df, "stationcode", PARIS_CITY_CODE)
 
     paris_station_data_df = paris_raw_data_df[[
         "id",
@@ -56,17 +118,6 @@ def consolidate_station_paris_data():
 
     return paris_station_data_df
 
-def get_insee_code(city_name):
-    data = {}
-    
-    with open(f"data/raw_data/{today_date}/commune_data.json") as fd:
-        data = json.load(fd)
-
-    communes_df = pd.json_normalize(data)
-    filtered_df = communes_df.query(f"nom == '{city_name}'")
-
-    return filtered_df["code"].to_list()[0]
-
 def consolidate_station_nantes_data():
     data = {}
     
@@ -75,10 +126,8 @@ def consolidate_station_nantes_data():
         data = json.load(fd)
     
     nantes_raw_data_df = pd.json_normalize(data)
-    nantes_raw_data_df["id"] = nantes_raw_data_df["number"].apply(lambda x: f"{NANTES_CITY_CODE}-{x}")
-    nantes_raw_data_df["address"] = None
+    nantes_raw_data_df = consolidate_format_df(nantes_raw_data_df, "number", NANTES_CITY_CODE)
     nantes_raw_data_df["code_insee_commune"] = get_insee_code("Nantes")
-    nantes_raw_data_df["created_date"] = date.today()
 
     nantes_station_data_df = nantes_raw_data_df[[
         "id",
@@ -113,10 +162,8 @@ def consolidate_station_toulouse_data():
         data = json.load(fd)
     
     toulouse_raw_data_df = pd.json_normalize(data)
-    toulouse_raw_data_df["id"] = toulouse_raw_data_df["number"].apply(lambda x: f"{TOULOUSE_CITY_CODE}-{x}")
-    toulouse_raw_data_df["address"] = None
+    toulouse_raw_data_df = consolidate_format_df(toulouse_raw_data_df, "number", TOULOUSE_CITY_CODE)
     toulouse_raw_data_df["code_insee_commune"] = get_insee_code("Toulouse")
-    toulouse_raw_data_df["created_date"] = date.today()
 
     toulouse_station_data_df = toulouse_raw_data_df[[
         "id",
@@ -152,11 +199,11 @@ def consolidate_station_strasbourg_data():
     
     strasbourg_raw_data_df = pd.json_normalize(data)
     strasbourg_raw_data_df["number"] = strasbourg_raw_data_df["id"]
-    strasbourg_raw_data_df["id"] = strasbourg_raw_data_df["id"].apply(lambda x: f"{STRASBOURG_CITY_CODE}-{x}")
-    strasbourg_raw_data_df["address"] = None
+    strasbourg_raw_data_df = consolidate_format_df(strasbourg_raw_data_df, "id", STRASBOURG_CITY_CODE)
     strasbourg_raw_data_df["code_insee_commune"] = get_insee_code("Strasbourg")
+
+    # There's no information about the name of the city inside the dataset. Therefore, city_name is forced
     strasbourg_raw_data_df["city_name"] = "strasbourg"
-    strasbourg_raw_data_df["created_date"] = date.today()
 
     strasbourg_station_data_df = strasbourg_raw_data_df[[
         "id",
@@ -184,45 +231,7 @@ def consolidate_station_strasbourg_data():
 
     return strasbourg_station_data_df
 
-def consolidate_station_data():
-    con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
-
-    paris_data = consolidate_station_paris_data()
-    nantes_data = consolidate_station_nantes_data()
-    toulouse_data = consolidate_station_toulouse_data()
-    strasbourg_data = consolidate_station_strasbourg_data()
-
-    all_data = [paris_data, nantes_data, toulouse_data, strasbourg_data]
-    all_data = pd.concat(all_data)
-
-    con.execute("INSERT OR REPLACE INTO CONSOLIDATE_STATION SELECT * FROM all_data;")
-
-
-def consolidate_city_data():
-    con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
-    data = {}
-
-    with open(f"data/raw_data/{today_date}/commune_data.json") as fd:
-        data = json.load(fd)
-
-    raw_data_df = pd.json_normalize(data)
-    raw_data_df["created_date"] = date.today()
-
-    city_data_df = raw_data_df[[
-        "code",
-        "nom",
-        "population"
-    ]]
-
-    city_data_df.rename(columns={
-        "code": "id",
-        "nom": "name",
-        "population": "nb_inhabitants"
-    }, inplace=True)
-
-    city_data_df["created_date"] = date.today()
-
-    con.execute("INSERT OR REPLACE INTO CONSOLIDATE_CITY SELECT * FROM city_data_df;")
+""" The functions below are used by consolidate_station_statement_data """
 
 def consolidate_paris_station_statement_data():
 
@@ -234,8 +243,8 @@ def consolidate_paris_station_statement_data():
         data = json.load(fd)
 
     paris_raw_data_df = pd.json_normalize(data)
-    paris_raw_data_df["station_id"] = paris_raw_data_df["stationcode"].apply(lambda x: f"{PARIS_CITY_CODE}-{x}")
-    paris_raw_data_df["created_date"] = date.today()
+    paris_raw_data_df = consolidate_statement_city_data(paris_raw_data_df, "stationcode", PARIS_CITY_CODE)
+
     paris_station_statement_data_df = paris_raw_data_df[[
         "station_id",
         "numdocksavailable",
@@ -262,8 +271,8 @@ def consolidate_nantes_station_statement_data():
         data = json.load(fd)
 
     nantes_raw_data_df = pd.json_normalize(data)
-    nantes_raw_data_df["station_id"] = nantes_raw_data_df["number"].apply(lambda x: f"{NANTES_CITY_CODE}-{x}")
-    nantes_raw_data_df["created_date"] = date.today()
+    nantes_raw_data_df = consolidate_statement_city_data(nantes_raw_data_df, "number", NANTES_CITY_CODE)
+    
     nantes_station_statement_data_df = nantes_raw_data_df[[
         "station_id",
         "available_bike_stands",
@@ -290,8 +299,8 @@ def consolidate_toulouse_station_statement_data():
         data = json.load(fd)
 
     toulouse_raw_data_df = pd.json_normalize(data)
-    toulouse_raw_data_df["station_id"] = toulouse_raw_data_df["number"].apply(lambda x: f"{TOULOUSE_CITY_CODE}-{x}")
-    toulouse_raw_data_df["created_date"] = date.today()
+    toulouse_raw_data_df = consolidate_statement_city_data(toulouse_raw_data_df, "number", TOULOUSE_CITY_CODE)
+
     toulouse_station_statement_data_df = toulouse_raw_data_df[[
         "station_id",
         "available_bike_stands",
@@ -318,9 +327,11 @@ def consolidate_strasbourg_station_statement_data():
         data = json.load(fd)
 
     strasbourg_raw_data_df = pd.json_normalize(data)
-    strasbourg_raw_data_df["station_id"] = strasbourg_raw_data_df["id"].apply(lambda x: f"{STRASBOURG_CITY_CODE}-{x}")
-    strasbourg_raw_data_df["created_date"] = date.today()
-    strasbourg_raw_data_df["last_reported"] = datetime.fromtimestamp(strasbourg_raw_data_df["last_reported"])
+    strasbourg_raw_data_df = consolidate_statement_city_data(strasbourg_raw_data_df, "id", STRASBOURG_CITY_CODE)
+
+    # The date is a timestamp, need to convert it to a datetime
+    strasbourg_raw_data_df["last_reported"] = strasbourg_raw_data_df["last_reported"].apply(lambda x: datetime.fromtimestamp(int(x)))
+
     strasbourg_station_statement_data_df = strasbourg_raw_data_df[[
         "station_id",
         "av",
@@ -337,15 +348,57 @@ def consolidate_strasbourg_station_statement_data():
 
     return strasbourg_station_statement_data_df
 
-def consolidate_station_statement_data():
+"""
+Format a data frame that will be used for the table CONSOLIDATE_STATION
+
+Params : 
+    - df : pandas data frame, containing the data
+    - column_source : string, name of the column where the station code is
+    - code : const, city code used 
+
+Returns : df, pandas data frame modified
+"""
+def consolidate_format_df(df, column_source, code):
+    df["id"] = df[column_source].apply(lambda x: f"{code}-{x}")
+    df["address"] = None
+    df["created_date"] = date.today()
+
+    return df
+
+"""
+Format a data frame that will be used for the table CONSOLIDATE_STATION_STATEMENT
+
+Params : 
+    - df : pandas data frame, containing the data
+    - column_source : string, name of the column where the station code is
+    - code : const, city code used 
+
+Returns : df, pandas data frame modified
+"""
+def consolidate_statement_city_data(df, column_source, code):
+    df["station_id"] = df[column_source].apply(lambda x: f"{code}-{x}")
+    df["created_date"] = date.today()
+
+    return df
+
+"""
+Get the INSEE code of a city based on table CONSOLIDATE_STATION
+
+Params : 
+    - city_name : name of the city that we want to know the INSEE code
+
+Returns : insee_code, string, code INSEE of city_name
+"""
+def get_insee_code(city_name):
+    data = {}
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
 
-    paris_data = consolidate_paris_station_statement_data()
-    nantes_data = consolidate_nantes_station_statement_data()
-    toulouse_data = consolidate_toulouse_station_statement_data()
-    strasbourg_data = consolidate_strasbourg_station_statement_data()
+    sql_statement = f"""
+    SELECT DISTINCT city_code 
+    FROM CONSOLIDATE_STATION
+    WHERE city_name = LOWER(?);
+    """
 
-    all_data = [paris_data, nantes_data, toulouse_data, strasbourg_data]
-    all_data = pd.concat(all_data)
+    insee_code = con.execute(sql_statement, [city_name]).fetchdf()
 
-    con.execute("INSERT OR REPLACE INTO CONSOLIDATE_STATION_STATEMENT SELECT * FROM all_data;") 
+    return insee_code
