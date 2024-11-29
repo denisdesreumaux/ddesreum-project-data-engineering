@@ -32,6 +32,14 @@ def get_strasbourg_realtime_bicycle_data():
 
     serialize_data(response.text, "strasbourg_realtime_bicycle_data.json")
 
+def get_montpellier_realtime_bicycle_data():
+    url = "https://portail-api-data.montpellier3m.fr/bikestation"
+    header = {"accept": "application/json"}
+
+    response = requests.get(url, headers=header)
+
+    serialize_data(response.text, "montpellier_realtime_bicycle_data.json")
+
 def get_commune_data():
     url = "https://geo.api.gouv.fr/communes"
 

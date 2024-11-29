@@ -15,6 +15,7 @@ from data_ingestion import (
     get_nantes_realtime_bicycle_data,
     get_toulouse_realtime_bicycle_data,
     get_strasbourg_realtime_bicycle_data,
+    get_montpellier_realtime_bicycle_data,
     get_commune_data
 )
 
@@ -26,24 +27,29 @@ def main():
     print("Data ingestion started.")
 
     # For Paris
-    print("Starting Paris ingestion...")
+    print("Starting ingestion for Paris...")
     get_paris_realtime_bicycle_data()
-    print("Paris' ingestion done !")
+    print("Ingestion for Paris done !")
 
     # For Nantes
-    print("Starting Nantes ingestion...")
+    print("Starting ingestion for Nantes...")
     get_nantes_realtime_bicycle_data()
-    print("Nantes' ingestion done !")
+    print("Ingestion for Nantes done !")
 
     # For Toulouse
-    print("Starting Toulouse ingestion...")
+    print("Starting ingestion for Toulouse...")
     get_toulouse_realtime_bicycle_data()
-    print("Toulouse's ingestion done !")
+    print("Ingestion for Toulouse done !")
 
     # For Strasbourg
-    print("Starting Strasbourg ingestion...")
+    print("Starting ingestion for Strasbourg...")
     get_strasbourg_realtime_bicycle_data()
-    print("Strasbourg's ingestion done !")
+    print("Ingestion for Strasbourg done !")
+
+    # For Montpellier
+    print("Starting ingestion for Montpellier...")
+    get_montpellier_realtime_bicycle_data()
+    print("Ingestion for Montpellier done !")
 
     # Towns data ingestion
     print("Starting towns ingestion...")

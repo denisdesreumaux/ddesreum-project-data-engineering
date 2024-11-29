@@ -11,6 +11,7 @@ PARIS_CITY_CODE = 1
 NANTES_CITY_CODE = 2
 TOULOUSE_CITY_CODE = 3
 STRASBOURG_CITY_CODE = 4
+MONTPELLIER_CITY_CODE = 5
 
 def create_consolidate_tables():
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
@@ -348,6 +349,34 @@ def consolidate_strasbourg_station_statement_data():
 
     return strasbourg_station_statement_data_df
 
+def consolidate_montpellier_station_statement_data():
+
+    con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
+    data = {}
+
+    # Consolidate station statement data for Toulouse
+    with open(f"data/raw_data/{today_date}/montpellier_realtime_bicycle_data.json") as fd:
+        data = json.load(fd)
+
+    montpellier_raw_data_df = pd.json_normalize(data)
+    montpellier_raw_data_df = consolidate_statement_city_data(montpellier_raw_data_df, "id", MONTPELLIER_CITY_CODE)
+
+    montpellier_station_statement_data_df = montpellier_raw_data_df[[
+        "station_id",
+        "availableBikeNumber.value",
+        "totalSlotNumber.value",
+        "availableBikeNumber.metadata.timestamp.value",
+        "created_date"
+    ]]
+    
+    montpellier_station_statement_data_df.rename(columns={
+        "availableBikeNumber.value": "bicycle_docks_available",
+        "totalSlotNumber.value": "bicycle_available",
+        "availableBikeNumber.metadata.timestamp.value": "last_statement_date",
+    }, inplace=True)
+
+    return montpellier_station_statement_data_df
+    
 """
 Format a data frame that will be used for the table CONSOLIDATE_STATION
 
