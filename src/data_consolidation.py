@@ -31,8 +31,9 @@ def consolidate_station_data():
     nantes_data = consolidate_station_nantes_data()
     toulouse_data = consolidate_station_toulouse_data()
     strasbourg_data = consolidate_station_strasbourg_data()
+    montpellier_data = consolidate_station_montpellier_data()
 
-    all_data = [paris_data, nantes_data, toulouse_data, strasbourg_data]
+    all_data = [paris_data, nantes_data, toulouse_data, strasbourg_data, montpellier_data]
     all_data = pd.concat(all_data)
 
     con.execute("INSERT OR REPLACE INTO CONSOLIDATE_STATION SELECT * FROM all_data;")
@@ -47,8 +48,9 @@ def consolidate_station_statement_data():
     nantes_data = consolidate_nantes_station_statement_data()
     toulouse_data = consolidate_toulouse_station_statement_data()
     strasbourg_data = consolidate_strasbourg_station_statement_data()
+    montpellier_data = consolidate_montpellier_station_statement_data()
 
-    all_data = [paris_data, nantes_data, toulouse_data, strasbourg_data]
+    all_data = [paris_data, nantes_data, toulouse_data, strasbourg_data, montpellier_data]
     all_data = pd.concat(all_data)
 
     con.execute("INSERT OR REPLACE INTO CONSOLIDATE_STATION_STATEMENT SELECT * FROM all_data;") 
@@ -231,6 +233,46 @@ def consolidate_station_strasbourg_data():
     }, inplace=True)
 
     return strasbourg_station_data_df
+
+def consolidate_station_montpellier_data():
+    data = {}
+    
+    # Consolidation logic for Strasbourg Bicycle data
+    with open(f"data/raw_data/{today_date}/montpellier_realtime_bicycle_data.json") as fd:
+        data = json.load(fd)
+    
+    montpellier_raw_data_df = pd.json_normalize(data)
+    montpellier_raw_data_df["number"] = montpellier_raw_data_df["id"]
+    montpellier_raw_data_df = consolidate_format_df(montpellier_raw_data_df, "id", MONTPELLIER_CITY_CODE)
+    montpellier_raw_data_df["code_insee_commune"] = get_insee_code("Montpellier")
+
+    montpellier_raw_data_df["longitude"] = montpellier_raw_data_df["location.value.coordinates"].apply(lambda x: x[0])
+    montpellier_raw_data_df["latitude"] = montpellier_raw_data_df["location.value.coordinates"].apply(lambda x: x[1])
+
+    montpellier_station_data_df = montpellier_raw_data_df[[
+        "id",
+        "number",
+        "address.value.streetAddress",
+        "address.value.addressLocality",
+        "address",
+        "longitude",
+        "latitude",
+        "status.value",
+        "created_date",
+        "totalSlotNumber.value",
+        "code_insee_commune"
+    ]]
+
+    montpellier_station_data_df.rename(columns={
+        "number": "code",
+        "status.value": "status",
+        "address.value.addressLocality": "city_name",
+        "code_insee_commune": "city_code",
+        "address.value.streetAddress": "name",
+        "totalSlotNumber.value": "capacity"
+    }, inplace=True)
+
+    return montpellier_station_data_df
 
 """ The functions below are used by consolidate_station_statement_data """
 
@@ -423,9 +465,9 @@ def get_insee_code(city_name):
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
 
     sql_statement = f"""
-    SELECT DISTINCT city_code 
-    FROM CONSOLIDATE_STATION
-    WHERE city_name = LOWER(?);
+    SELECT DISTINCT id 
+    FROM CONSOLIDATE_CITY
+    WHERE name = ?;
     """
 
     insee_code = con.execute(sql_statement, [city_name]).fetchdf()
