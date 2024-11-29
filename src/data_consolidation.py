@@ -470,6 +470,6 @@ def get_insee_code(city_name):
     WHERE name = ?;
     """
 
-    insee_code = con.execute(sql_statement, [city_name]).fetchdf()
+    insee_code = con.execute(sql_statement, [city_name]).fetchone()
 
-    return insee_code
+    return insee_code[0] if insee_code else None
