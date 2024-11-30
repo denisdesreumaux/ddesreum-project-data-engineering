@@ -242,8 +242,8 @@ def consolidate_station_montpellier_data():
         data = json.load(fd)
     
     montpellier_raw_data_df = pd.json_normalize(data)
-    montpellier_raw_data_df["number"] = montpellier_raw_data_df["id"]
-    montpellier_raw_data_df = consolidate_format_df(montpellier_raw_data_df, "id", MONTPELLIER_CITY_CODE)
+    montpellier_raw_data_df["number"] = montpellier_raw_data_df["id"].str[-3:]
+    montpellier_raw_data_df = consolidate_format_df(montpellier_raw_data_df, "number", MONTPELLIER_CITY_CODE)
     montpellier_raw_data_df["code_insee_commune"] = get_insee_code("Montpellier")
 
     montpellier_raw_data_df["longitude"] = montpellier_raw_data_df["location.value.coordinates"].apply(lambda x: x[0])
