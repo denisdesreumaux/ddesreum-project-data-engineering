@@ -401,6 +401,8 @@ def consolidate_montpellier_station_statement_data():
         data = json.load(fd)
 
     montpellier_raw_data_df = pd.json_normalize(data)
+    montpellier_raw_data_df["id"] = montpellier_raw_data_df["id"].str[-3:]
+
     montpellier_raw_data_df = consolidate_statement_city_data(montpellier_raw_data_df, "id", MONTPELLIER_CITY_CODE)
 
     montpellier_station_statement_data_df = montpellier_raw_data_df[[
