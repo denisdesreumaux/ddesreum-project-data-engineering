@@ -21,52 +21,62 @@ def create_consolidate_tables():
             print(statement)
             con.execute(statement)
 
-"""
-Call each function for each city that will provide data for the CONSOLIDATE_STATION table
-"""
 def consolidate_station_data():
+    """
+    Call each function for each city that will provide data for the CONSOLIDATE_STATION table
+    """
+
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
 
+    # Retrieve all data frames
     paris_data = consolidate_station_paris_data()
     nantes_data = consolidate_station_nantes_data()
     toulouse_data = consolidate_station_toulouse_data()
     strasbourg_data = consolidate_station_strasbourg_data()
     montpellier_data = consolidate_station_montpellier_data()
 
+    # Merge the data frames
     all_data = [paris_data, nantes_data, toulouse_data, strasbourg_data, montpellier_data]
     all_data = pd.concat(all_data)
 
+    # Push the merged data frame into the CONSOLIDATE_STATION table
     con.execute("INSERT OR REPLACE INTO CONSOLIDATE_STATION SELECT * FROM all_data;")
 
-"""
-Call each function for each city that will provide data for the CONSOLIDATE_STATION_STATEMENT table
-"""
 def consolidate_station_statement_data():
+    """
+    Call each function for each city that will provide data for the CONSOLIDATE_STATION_STATEMENT table
+    """
+
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
 
+    # Retrieve all data frames
     paris_data = consolidate_paris_station_statement_data()
     nantes_data = consolidate_nantes_station_statement_data()
     toulouse_data = consolidate_toulouse_station_statement_data()
     strasbourg_data = consolidate_strasbourg_station_statement_data()
     montpellier_data = consolidate_montpellier_station_statement_data()
 
+    # Merge the data frames
     all_data = [paris_data, nantes_data, toulouse_data, strasbourg_data, montpellier_data]
     all_data = pd.concat(all_data)
 
+    # Push the merged data frame into the CONSOLIDATE_STATION_STATEMENT table
     con.execute("INSERT OR REPLACE INTO CONSOLIDATE_STATION_STATEMENT SELECT * FROM all_data;") 
 
-"""
-Retrieve city data and insert it inside the CONSOLIDATE_CITY table
-"""
 def consolidate_city_data():
+    """
+    Retrieve city data and insert it inside the CONSOLIDATE_CITY table
+    """
+
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
     data = {}
 
+    # Get data from the JSON file
     with open(f"data/raw_data/{today_date}/commune_data.json") as fd:
         data = json.load(fd)
 
+
     raw_data_df = pd.json_normalize(data)
-    raw_data_df["created_date"] = date.today()
 
     city_data_df = raw_data_df[[
         "code",
@@ -87,11 +97,20 @@ def consolidate_city_data():
 """ The functions below are used by consolidate_station_data """
 
 def consolidate_station_paris_data():
+    """
+    Retrieve data from the JSON file for Paris and processes it to match the 
+    format and the constraints of the CONSOLIDATE_STATION 
+
+    Returns : paris_station_data_df, a pandas data frame containing the consolidated data
+    """
+
+    # Get data from the JSON file
     data = {}
 
     with open(f"data/raw_data/{today_date}/paris_realtime_bicycle_data.json") as fd:
         data = json.load(fd)
     
+    # Format the data
     paris_raw_data_df = pd.json_normalize(data)
     paris_raw_data_df = consolidate_format_df(paris_raw_data_df, "stationcode", PARIS_CITY_CODE)
     paris_raw_data_df["is_installed"] = paris_raw_data_df["is_installed"].apply(lambda x: "OPEN" if x == "OUI" else "CLOSED")
@@ -110,6 +129,7 @@ def consolidate_station_paris_data():
         "capacity"
     ]]
 
+    # Rename the columns of the data frame
     paris_station_data_df.rename(columns={
         "stationcode": "code",
         "name": "name",
@@ -123,12 +143,20 @@ def consolidate_station_paris_data():
     return paris_station_data_df
 
 def consolidate_station_nantes_data():
-    data = {}
+    """
+    Retrieve data from the JSON file for Nantes and processes it to match the 
+    format and the constraints of the CONSOLIDATE_STATION 
+
+    Returns : nantes_station_data_df, a pandas data frame containing the consolidated data
+    """
     
-    # Consolidation logic for Paris Bicycle data
+    # Get data from the JSON file
+    data = {}
+
     with open(f"data/raw_data/{today_date}/nantes_realtime_bicycle_data.json") as fd:
         data = json.load(fd)
     
+    # Format the data
     nantes_raw_data_df = pd.json_normalize(data)
     nantes_raw_data_df = consolidate_format_df(nantes_raw_data_df, "number", NANTES_CITY_CODE)
     nantes_raw_data_df["code_insee_commune"] = get_insee_code("Nantes")
@@ -147,6 +175,7 @@ def consolidate_station_nantes_data():
         "code_insee_commune"
     ]]
 
+    # Rename the columns of the data frame
     nantes_station_data_df.rename(columns={
         "number": "code",
         "position.lon": "longitude",
@@ -159,12 +188,20 @@ def consolidate_station_nantes_data():
     return nantes_station_data_df
 
 def consolidate_station_toulouse_data():
+    """
+    Retrieve data from the JSON file for Toulouse and processes it to match the 
+    format and the constraints of the CONSOLIDATE_STATION 
+
+    Returns : toulouse_station_data_df, a pandas data frame containing the consolidated data
+    """
+    
+    # Get data from the JSON file
     data = {}
     
-    # Consolidation logic for Paris Bicycle data
     with open(f"data/raw_data/{today_date}/toulouse_realtime_bicycle_data.json") as fd:
         data = json.load(fd)
     
+    # Format the data
     toulouse_raw_data_df = pd.json_normalize(data)
     toulouse_raw_data_df = consolidate_format_df(toulouse_raw_data_df, "number", TOULOUSE_CITY_CODE)
     toulouse_raw_data_df["code_insee_commune"] = get_insee_code("Toulouse")
@@ -183,6 +220,7 @@ def consolidate_station_toulouse_data():
         "code_insee_commune"
     ]]
 
+    # Rename the columns of the data frame
     toulouse_station_data_df.rename(columns={
         "number": "code",
         "position.lon": "longitude",
@@ -195,12 +233,20 @@ def consolidate_station_toulouse_data():
     return toulouse_station_data_df
 
 def consolidate_station_strasbourg_data():
+    """
+    Retrieve data from the JSON file for Strasbourg and processes it to match the 
+    format and the constraints of the CONSOLIDATE_STATION 
+
+    Returns : strasbourg_station_data_df, a pandas data frame containing the consolidated data
+    """
+    
+    # Get data from the JSON file
     data = {}
     
-    # Consolidation logic for Strasbourg Bicycle data
     with open(f"data/raw_data/{today_date}/strasbourg_realtime_bicycle_data.json") as fd:
         data = json.load(fd)
     
+    # Format the data
     strasbourg_raw_data_df = pd.json_normalize(data)
     strasbourg_raw_data_df["number"] = strasbourg_raw_data_df["id"]
     strasbourg_raw_data_df = consolidate_format_df(strasbourg_raw_data_df, "id", STRASBOURG_CITY_CODE)
@@ -224,6 +270,7 @@ def consolidate_station_strasbourg_data():
         "code_insee_commune"
     ]]
 
+    # Rename the columns of the data frame
     strasbourg_station_data_df.rename(columns={
         "number": "code",
         "is_installed": "status",
@@ -237,9 +284,16 @@ def consolidate_station_strasbourg_data():
     return strasbourg_station_data_df
 
 def consolidate_station_montpellier_data():
+    """
+    Retrieve data from the JSON file for Montpellier and processes it to match the 
+    format and the constraints of the CONSOLIDATE_STATION 
+
+    Returns : montpellier_station_data_df, a pandas data frame containing the consolidated data
+    """
+    
+    # Get data from the JSON file
     data = {}
     
-    # Consolidation logic for Strasbourg Bicycle data
     with open(f"data/raw_data/{today_date}/montpellier_realtime_bicycle_data.json") as fd:
         data = json.load(fd)
     
@@ -249,6 +303,7 @@ def consolidate_station_montpellier_data():
     montpellier_raw_data_df["code_insee_commune"] = get_insee_code("Montpellier")
     montpellier_raw_data_df["status.value"] = montpellier_raw_data_df["status.value"].apply(lambda x: "OPEN" if x == "working" else "CLOSED")
 
+    # The coordinates are formatted inside a list. Unwind it to get only the longitude and the latitude
     montpellier_raw_data_df["longitude"] = montpellier_raw_data_df["location.value.coordinates"].apply(lambda x: x[0])
     montpellier_raw_data_df["latitude"] = montpellier_raw_data_df["location.value.coordinates"].apply(lambda x: x[1])
 
@@ -266,6 +321,7 @@ def consolidate_station_montpellier_data():
         "code_insee_commune"
     ]]
 
+    # Rename the columns of the data frame
     montpellier_station_data_df.rename(columns={
         "number": "code",
         "status.value": "status",
@@ -280,14 +336,21 @@ def consolidate_station_montpellier_data():
 """ The functions below are used by consolidate_station_statement_data """
 
 def consolidate_paris_station_statement_data():
+    """
+    Retrieve data from the JSON file for Paris and processes it to match the 
+    format and the constraints of the CONSOLIDATE_STATEMENT_STATION 
 
+    Returns : paris_station_data_df, a pandas data frame containing the consolidated data
+    """
+    
+    # Get data from the JSON file
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
     data = {}
 
-    # Consolidate station statement data for Paris
     with open(f"data/raw_data/{today_date}/paris_realtime_bicycle_data.json") as fd:
         data = json.load(fd)
 
+    # Format the data
     paris_raw_data_df = pd.json_normalize(data)
     paris_raw_data_df = consolidate_statement_city_data(paris_raw_data_df, "stationcode", PARIS_CITY_CODE)
 
@@ -299,6 +362,7 @@ def consolidate_paris_station_statement_data():
         "created_date"
     ]]
     
+    # Rename the columns of the data frame
     paris_station_statement_data_df.rename(columns={
         "numdocksavailable": "bicycle_docks_available",
         "numbikesavailable": "bicycle_available",
@@ -308,14 +372,21 @@ def consolidate_paris_station_statement_data():
     return paris_station_statement_data_df
 
 def consolidate_nantes_station_statement_data():
+    """
+    Retrieve data from the JSON file for Nantes and processes it to match the 
+    format and the constraints of the CONSOLIDATE_STATEMENT_STATION 
 
+    Returns : nantes_station_data_df, a pandas data frame containing the consolidated data
+    """
+
+    # Get data from the JSON file
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
     data = {}
 
-    # Consolidate station statement data for Nantes
     with open(f"data/raw_data/{today_date}/nantes_realtime_bicycle_data.json") as fd:
         data = json.load(fd)
 
+    # Format the data
     nantes_raw_data_df = pd.json_normalize(data)
     nantes_raw_data_df = consolidate_statement_city_data(nantes_raw_data_df, "number", NANTES_CITY_CODE)
     
@@ -327,6 +398,7 @@ def consolidate_nantes_station_statement_data():
         "created_date"
     ]]
     
+    # Rename columns of the data frame
     nantes_station_statement_data_df.rename(columns={
         "available_bike_stands": "bicycle_docks_available",
         "available_bikes": "bicycle_available",
@@ -336,14 +408,21 @@ def consolidate_nantes_station_statement_data():
     return nantes_station_statement_data_df
 
 def consolidate_toulouse_station_statement_data():
+    """
+    Retrieve data from the JSON file for Toulouse and processes it to match the 
+    format and the constraints of the CONSOLIDATE_STATEMENT_STATION 
 
+    Returns : toulouse_station_data_df, a pandas data frame containing the consolidated data
+    """
+
+    # Get data from the JSON file
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
     data = {}
 
-    # Consolidate station statement data for Toulouse
     with open(f"data/raw_data/{today_date}/toulouse_realtime_bicycle_data.json") as fd:
         data = json.load(fd)
 
+    # Format the data
     toulouse_raw_data_df = pd.json_normalize(data)
     toulouse_raw_data_df = consolidate_statement_city_data(toulouse_raw_data_df, "number", TOULOUSE_CITY_CODE)
 
@@ -355,6 +434,7 @@ def consolidate_toulouse_station_statement_data():
         "created_date"
     ]]
     
+    # Rename columns of the data frame
     toulouse_station_statement_data_df.rename(columns={
         "available_bike_stands": "bicycle_docks_available",
         "available_bikes": "bicycle_available",
@@ -364,14 +444,21 @@ def consolidate_toulouse_station_statement_data():
     return toulouse_station_statement_data_df
 
 def consolidate_strasbourg_station_statement_data():
+    """
+    Retrieve data from the JSON file for Strasbourg and processes it to match the 
+    format and the constraints of the CONSOLIDATE_STATEMENT_STATION 
 
+    Returns : strasbourg_station_data_df, a pandas data frame containing the consolidated data
+    """
+
+    # Get data from the JSON file
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
     data = {}
 
-    # Consolidate station statement data for Toulouse
     with open(f"data/raw_data/{today_date}/strasbourg_realtime_bicycle_data.json") as fd:
         data = json.load(fd)
 
+    # Format the data
     strasbourg_raw_data_df = pd.json_normalize(data)
     strasbourg_raw_data_df = consolidate_statement_city_data(strasbourg_raw_data_df, "id", STRASBOURG_CITY_CODE)
 
@@ -386,6 +473,7 @@ def consolidate_strasbourg_station_statement_data():
         "created_date"
     ]]
     
+    # Rename the columns of the data frame
     strasbourg_station_statement_data_df.rename(columns={
         "av": "bicycle_docks_available",
         "to": "bicycle_available",
@@ -395,14 +483,21 @@ def consolidate_strasbourg_station_statement_data():
     return strasbourg_station_statement_data_df
 
 def consolidate_montpellier_station_statement_data():
+    """
+    Retrieve data from the JSON file for Montpellier and processes it to match the 
+    format and the constraints of the CONSOLIDATE_STATEMENT_STATION 
 
+    Returns : montpellier_station_data_df, a pandas data frame containing the consolidated data
+    """
+
+    # Get data from the JSON file
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
     data = {}
 
-    # Consolidate station statement data for Toulouse
     with open(f"data/raw_data/{today_date}/montpellier_realtime_bicycle_data.json") as fd:
         data = json.load(fd)
 
+    # Format the data
     montpellier_raw_data_df = pd.json_normalize(data)
     montpellier_raw_data_df["id"] = montpellier_raw_data_df["id"].str[-3:]
 
@@ -416,6 +511,7 @@ def consolidate_montpellier_station_statement_data():
         "created_date"
     ]]
     
+    # Rename the columns of the date frame
     montpellier_station_statement_data_df.rename(columns={
         "availableBikeNumber.value": "bicycle_docks_available",
         "totalSlotNumber.value": "bicycle_available",
@@ -424,48 +520,54 @@ def consolidate_montpellier_station_statement_data():
 
     return montpellier_station_statement_data_df
     
-"""
-Format a data frame that will be used for the table CONSOLIDATE_STATION
 
-Params : 
-    - df : pandas data frame, containing the data
-    - column_source : string, name of the column where the station code is
-    - code : const, city code used 
-
-Returns : df, pandas data frame modified
-"""
 def consolidate_format_df(df, column_source, code):
+    """
+    Format a data frame that will be used for the table CONSOLIDATE_STATION
+
+    Params : 
+        - df : pandas data frame, containing the data
+        - column_source : string, name of the column where the station code is
+        - code : const, city code used 
+
+    Returns : df, pandas data frame modified
+    """
+    
     df["id"] = df[column_source].apply(lambda x: f"{code}-{x}")
     df["address"] = None
     df["created_date"] = date.today()
 
     return df
 
-"""
-Format a data frame that will be used for the table CONSOLIDATE_STATION_STATEMENT
 
-Params : 
-    - df : pandas data frame, containing the data
-    - column_source : string, name of the column where the station code is
-    - code : const, city code used 
-
-Returns : df, pandas data frame modified
-"""
 def consolidate_statement_city_data(df, column_source, code):
+    """
+    Format a data frame that will be used for the table CONSOLIDATE_STATION_STATEMENT
+
+    Params : 
+        - df : pandas data frame, containing the data
+        - column_source : string, name of the column where the station code is
+        - code : const, city code used 
+
+    Returns : df, pandas data frame modified
+    """
+
     df["station_id"] = df[column_source].apply(lambda x: f"{code}-{x}")
     df["created_date"] = date.today()
 
     return df
 
-"""
-Get the INSEE code of a city based on table CONSOLIDATE_STATION
 
-Params : 
-    - city_name : name of the city that we want to know the INSEE code
-
-Returns : insee_code, string, code INSEE of city_name
-"""
 def get_insee_code(city_name):
+    """
+    Get the INSEE code of a city based on table CONSOLIDATE_STATION
+
+    Params : 
+        - city_name : name of the city that we want to know the INSEE code
+
+    Returns : insee_code, string, code INSEE of city_name
+    """
+
     data = {}
     con = duckdb.connect(database = "data/duckdb/mobility_analysis.duckdb", read_only = False)
 

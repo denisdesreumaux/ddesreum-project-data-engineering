@@ -4,7 +4,10 @@ from datetime import datetime
 import requests
 
 def get_paris_realtime_bicycle_data():
-    
+    """
+    Ingestion for data for Paris
+    """
+
     url = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/exports/json"
     
     response = requests.request("GET", url)
@@ -12,6 +15,10 @@ def get_paris_realtime_bicycle_data():
     serialize_data(response.text, "paris_realtime_bicycle_data.json")
 
 def get_nantes_realtime_bicycle_data():
+    """
+    Ingestion for data for Nantes
+    """
+    
     url = "https://data.nantesmetropole.fr/api/explore/v2.1/catalog/datasets/244400404_stations-velos-libre-service-nantes-metropole-disponibilites/exports/json"
 
     response = requests.request("GET", url)
@@ -19,6 +26,10 @@ def get_nantes_realtime_bicycle_data():
     serialize_data(response.text, "nantes_realtime_bicycle_data.json")
 
 def get_toulouse_realtime_bicycle_data():
+    """
+    Ingestion for data for Toulouse
+    """
+    
     url = "https://data.toulouse-metropole.fr/api/explore/v2.1/catalog/datasets/api-velo-toulouse-temps-reel/exports/json"
 
     response = requests.request("GET", url)
@@ -26,6 +37,10 @@ def get_toulouse_realtime_bicycle_data():
     serialize_data(response.text, "toulouse_realtime_bicycle_data.json")
 
 def get_strasbourg_realtime_bicycle_data():
+    """
+    Ingestion for data for Strasbourg
+    """
+    
     url = "https://data.strasbourg.eu/api/explore/v2.1/catalog/datasets/stations-velhop/exports/json"
 
     response = requests.request("GET", url)
@@ -33,6 +48,10 @@ def get_strasbourg_realtime_bicycle_data():
     serialize_data(response.text, "strasbourg_realtime_bicycle_data.json")
 
 def get_montpellier_realtime_bicycle_data():
+    """
+    Ingestion for data for Montpellier
+    """
+    
     url = "https://portail-api-data.montpellier3m.fr/bikestation"
     header = {"accept": "application/json"}
 
@@ -41,6 +60,10 @@ def get_montpellier_realtime_bicycle_data():
     serialize_data(response.text, "montpellier_realtime_bicycle_data.json")
 
 def get_commune_data():
+    """
+    Ingestion for data of cities
+    """
+    
     url = "https://geo.api.gouv.fr/communes"
 
     response = requests.request("GET", url)
