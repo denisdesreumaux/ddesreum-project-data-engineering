@@ -113,6 +113,8 @@ def consolidate_station_paris_data():
     # Format the data
     paris_raw_data_df = pd.json_normalize(data)
     paris_raw_data_df = consolidate_format_df(paris_raw_data_df, "stationcode", PARIS_CITY_CODE)
+
+    # Standardization of the status between all APIs
     paris_raw_data_df["is_installed"] = paris_raw_data_df["is_installed"].apply(lambda x: "OPEN" if x == "OUI" else "CLOSED")
 
     paris_station_data_df = paris_raw_data_df[[
@@ -251,6 +253,8 @@ def consolidate_station_strasbourg_data():
     strasbourg_raw_data_df["number"] = strasbourg_raw_data_df["id"]
     strasbourg_raw_data_df = consolidate_format_df(strasbourg_raw_data_df, "id", STRASBOURG_CITY_CODE)
     strasbourg_raw_data_df["code_insee_commune"] = get_insee_code("Strasbourg")
+
+    # Standardization of the status between all APIs
     strasbourg_raw_data_df["is_installed"] = strasbourg_raw_data_df["is_installed"].apply(lambda x: "OPEN" if x == "1" else "CLOSED")
 
     # There's no information about the name of the city inside the dataset. Therefore, city_name is forced
@@ -301,6 +305,8 @@ def consolidate_station_montpellier_data():
     montpellier_raw_data_df["number"] = montpellier_raw_data_df["id"].str[-3:]
     montpellier_raw_data_df = consolidate_format_df(montpellier_raw_data_df, "number", MONTPELLIER_CITY_CODE)
     montpellier_raw_data_df["code_insee_commune"] = get_insee_code("Montpellier")
+
+    # Standardization of the status between all APIs
     montpellier_raw_data_df["status.value"] = montpellier_raw_data_df["status.value"].apply(lambda x: "OPEN" if x == "working" else "CLOSED")
 
     # The coordinates are formatted inside a list. Unwind it to get only the longitude and the latitude

@@ -93,6 +93,8 @@ Attention, après avoir supprimé les tables, il faudra faire une nouvelle inges
 
 La structure des tables ainsi que la structure des fichiers n'ont pas changé. Cependant pour Starsbourg, le nom de la ville a été écrit en dur dans le code pour le stocker dans la colonne _city_name_ de la table _CONSOLIDATE_STATION_ car cette information n'était pas disponible via leur API.
 
+Aussi, la colonne STATUS a été uniformisée car les API utilisent différentes façon. Cette colonne ne peut prendre queles valeurs "OPEN" ou "CLOSED"
+
 # Autre site similaire
 
 Un autre site recense les stations de centaines de villes. Il s'agit de [citybik.es](citybik.es). L'avantage avec ce site est d'avoir la possibilité d'avoir accès aux données de plus de villes du monde, mais dans le cadre du projet, on perd la notion de devoir appeler au moins 2 API différentes concernant les stations. 
