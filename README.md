@@ -18,17 +18,25 @@ Voici la liste des villes dont les données ont été récupérées pour ce proj
 
 - [Open data Montpellier, endpoint bikestation](https://portail-api.montpellier3m.fr/)
 
-# Différences entre le sujet et ce projet
+# Préparation du terminal
 
-La structure des tables ainsi que la structure des fichiers n'ont pas changé. On peut cependant mettre en avant le fait que pour Strasbourg, j'ai dû mettre le nom de la ville en dur dans le code pour la stocker dans la colonne _city_name_ de la table _CONSOLIDATE_STATION_.
+Avant de lancer les commandes python des parties suivantes, il vous faut préparer un terminal. Pour cela, clonez le projet et exécutez les commandes suivantes à la racine du projet : 
+
+```python
+python3 -m venv .venv
+
+source .venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+(.venv) devrait être affiché au début de votre prompt.
 
 # Lancer l'ingestion
 
 Il vous faut taper les commandes suivantes à partir de la racine du projet : 
 
 ```python
-source .venv/bin/activate
-
 python src/main.py
 ```
 
@@ -80,6 +88,12 @@ python setup/deleteAllTables.py
 ```
 
 Attention, après avoir supprimé les tables, il faudra faire une nouvelle ingestion afin de pouvoir exécuter les deux autres commades de test.
+
+# Différences entre le sujet et ce projet
+
+La structure des tables ainsi que la structure des fichiers n'ont pas changé. On peut cependant mettre en avant le fait que pour Strasbourg, j'ai dû mettre le nom de la ville en dur dans le code pour la stocker dans la colonne _city_name_ de la table _CONSOLIDATE_STATION_.
+
+
 
 # Autre site similaire
 
