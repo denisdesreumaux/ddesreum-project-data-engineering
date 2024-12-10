@@ -91,9 +91,7 @@ Attention, après avoir supprimé les tables, il faudra faire une nouvelle inges
 
 # Différences entre le sujet et ce projet
 
-La structure des tables ainsi que la structure des fichiers n'ont pas changé. On peut cependant mettre en avant le fait que pour Strasbourg, j'ai dû mettre le nom de la ville en dur dans le code pour la stocker dans la colonne _city_name_ de la table _CONSOLIDATE_STATION_.
-
-
+La structure des tables ainsi que la structure des fichiers n'ont pas changé. Cependant pour Starsbourg, le nom de la ville a été écrit en dur dans le code pour le stocker dans la colonne _city_name_ de la table _CONSOLIDATE_STATION_ car cette information n'était pas disponible via leur API.
 
 # Autre site similaire
 
